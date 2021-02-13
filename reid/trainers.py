@@ -19,8 +19,8 @@ class Trainer(object):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = model
         self.AE_classifier = AE_classifier
-        # self.pid_criterion = torch.nn.CrossEntropyLoss().to(self.device)
-        self.pid_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None)
+        self.pid_criterion = torch.nn.CrossEntropyLoss().to(self.device)
+        #self.pid_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None).to(self.device)
         self.xi = xi
 
     def train(self, epoch, data_loader, target_train_loader, optimizer, print_freq=1):

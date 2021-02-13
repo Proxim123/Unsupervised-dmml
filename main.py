@@ -39,7 +39,9 @@ def get_data(data_dir, source, target, height, width, batch_size, re=0, workers=
         normalizer,
         T.RandomErasing(EPSILON=re),
     ])
-    train_set = Market1501("./dastasets/market/", train_transformer, split='train')
+    #train_set = Market1501("./data/market", train_transformer, split='train')
+    dataset_root = osp.join(data_dir, source)
+    train_set = Market1501(dataset_root, train_transformer, split='train')
     test_transformer = T.Compose([
         T.Resize((height, width), interpolation=3),
         T.ToTensor(),
@@ -177,7 +179,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="AE for Domain Adaptive Re-ID")
     # source
-    parser.add_argument('-s', '--source', type=str, default='market',
+    parser.add_argument('-s', '--source', type=str, default='duke',
                         choices=['market', 'duke', 'msmt17'])
     # target
     parser.add_argument('-t', '--target', type=str, default='market',
@@ -194,7 +196,7 @@ if __name__ == '__main__':
     # model
     parser.add_argument('-a', '--arch', type=str, default='resnet50',
                         choices=models.names())
-    parser.add_argument('--features', type=int, default=751)
+    parser.add_argument('--features', type=int, default=702)
     parser.add_argument('--dropout', type=float, default=0.5)
     # optimizer
     parser.add_argument('--lr', type=float, default=0.1,
@@ -210,9 +212,9 @@ if __name__ == '__main__':
     parser.add_argument('--epochs_decay', type=int, default=40)
     parser.add_argument('--print-freq', type=int, default=50)
     working_dir = osp.dirname(osp.abspath(__file__))
-    parser.add_argument('--data-dir', type=str, metavar='PATH', default=osp.join("", 'dastasets'))
-    parser.add_argument('--logs-dir', type=str, metavar='PATH',
-                        default=osp.join(working_dir, 'logs'))
+    parser.add_argument('--data-dir', type=str, metavar='PATH', default=osp.join("", 'data'))
+    parser.add_argument('--logs-dir', type=str, metavar='PATH', default=osp.join(working_dir, 'logs'))
+    parser.add_argument('--dataset_root=', type=str, default='./data/duke')
     # testing configs
     parser.add_argument('--output_feature', type=str, default='pool5')
     # hyper-parameter

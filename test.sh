@@ -1,5 +1,5 @@
 #!/bin/bash
-export CUDA_VISIBLE_DEVICES=6 
+export CUDA_VISIBLE_DEVICES=1,2,3,4 
 
 #########duke 2 market transfer
 mu=0.4

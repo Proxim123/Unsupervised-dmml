@@ -19,12 +19,13 @@ class Market1501(Data.Dataset):
         self.loader = default_loader
         self.split = split
 
+        #data_path = os.path.join(dataset_root, 'bounding_box_train')
         if split == 'train':
             data_path = os.path.join(dataset_root, 'bounding_box_train')
         elif split == 'gallery':
             data_path = os.path.join(dataset_root, 'bounding_box_test')
         elif split == 'query':
-            data_path = os.path.join(dataset_root, 'query')
+            data_path = ospj(dataset_root, 'query')
         
         self.imgs = [path for path in list_pictures(data_path)]
 
@@ -49,9 +50,10 @@ class Market1501(Data.Dataset):
         """
         file_path: unix style file path
         return: person id
-        './dataset/market1501\\bounding_box_train\\0002_c1s1_000451_03.jpg'
+        #'./dataset/market1501\\bounding_box_train\\0002_c1s1_000451_03.jpg'
         """
-        return int(file_path.split('\\')[-1].split('_')[0])
+        return int(file_path.split('/')[-1].split('_')[0])
+        #return int(file_path.split('\\')[-1].split('_')[0])
 
     @staticmethod
     def camera(file_path):
@@ -59,7 +61,8 @@ class Market1501(Data.Dataset):
         file_path: unix style file path
         return: camera id
         """
-        return int(file_path.split('\\')[-1].split('_')[1][1])
+        return int(file_path.split('/')[-1].split('_')[1][1])
+        #return int(file_path.split('\\')[-1].split('_')[1][1])
 
     @property
     def ids(self):
