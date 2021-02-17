@@ -78,11 +78,13 @@ class ResNet(nn.Module):
 
     def forward(self, x, output_feature=None):
         for name, module in self.base._modules.items():
+            #print('model: {}'.format(module))
             if name == 'avgpool':
                 break
             else:
                 x = module(x)
 
+        #print("features: {}, classes: {}".format(self.num_features, self.num_classes))
         if self.cut_at_pooling:
             return x
 
@@ -100,6 +102,17 @@ class ResNet(nn.Module):
             tgt_feat = self.drop(tgt_feat)
             if output_feature == 'tgt_feat':
                 return tgt_feat
+            else:
+                x = F.normalize(x)
+                #x = self.l2norm(x)
+                x = F.relu(x)
+                x = self.drop(x)
+                logits = self.classifier(x)
+                if output_feature == 'src_feat':
+                    return x, logits
+        
+        return logits
+        """
         if self.norm:
             x = F.normalize(x)
         elif self.has_embedding:
@@ -109,6 +122,7 @@ class ResNet(nn.Module):
         if self.num_classes > 0:
             x = self.classifier(x)
         return x
+        """
 
     def reset_params(self):
         for m in self.modules():

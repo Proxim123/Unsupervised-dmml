@@ -22,6 +22,7 @@ from reid.utils.serialization import load_checkpoint, save_checkpoint
 from reid.nonparametric_classifier import nonparametric_classifier
 from reid.loss.sampler import RandomSampler
 from reid.loss.market1501 import Market1501
+from reid.loss.duke import DukeMTMC_reID
 
 
 def get_data(data_dir, source, target, height, width, batch_size, re=0, workers=8):
@@ -41,7 +42,8 @@ def get_data(data_dir, source, target, height, width, batch_size, re=0, workers=
     ])
     #train_set = Market1501("./data/market", train_transformer, split='train')
     dataset_root = osp.join(data_dir, source)
-    train_set = Market1501(dataset_root, train_transformer, split='train')
+    #train_set = Market1501(dataset_root, train_transformer, split='train')
+    train_set = DukeMTMC_reID(dataset_root, train_transformer, split='train')
     test_transformer = T.Compose([
         T.Resize((height, width), interpolation=3),
         T.ToTensor(),
@@ -142,6 +144,8 @@ def main(args):
         {'params': base_params_need_for_grad, 'lr_mult': 0.1},
         {'params': new_params, 'lr_mult': 1.0}]
 
+    #optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
     optimizer = torch.optim.SGD(param_groups, lr=args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay,
@@ -151,9 +155,31 @@ def main(args):
     trainer = Trainer(model, target_classifier, xi=args.xi)
 
     # Schedule learning rate
+    #def adjust_lr(epoch):
+    #    step_size = args.epochs_decay
+    #    epoch_total = args.epochs
+    #    lr = args.lr
+    #    if epoch <= 5:
+    #        for g in optimizer.param_groups:
+    #            g['lr'] = lr * epoch * (0.1 ** (epoch // step_size))
+    #        return
+    #    if 5 < epoch <= 20:
+    #        for g in optimizer.param_groups:
+    #            g['lr'] = lr * 10 * (0.1 ** (epoch // step_size))
+    #        return
+    #    if 20 < epoch <= 30:
+    #        for g in optimizer.param_groups:
+    #            g['lr'] = lr * (0.1 ** (epoch // step_size))
+    #        return    
+    #    lr = args.lr * (0.2 ** (epoch // step_size))
+    #    for g in optimizer.param_groups:
+    #        g['lr'] = lr * g.get('lr_mult', 1)
+
     def adjust_lr(epoch):
         step_size = args.epochs_decay
-        lr = args.lr * (0.1 ** (epoch // step_size))
+        epoch_total = args.epochs
+        lr = args.lr * (0.2 ** (epoch // step_size))
+        print('learning rate: {}'.format(lr))
         for g in optimizer.param_groups:
             g['lr'] = lr * g.get('lr_mult', 1)
 
@@ -199,10 +225,11 @@ if __name__ == '__main__':
     parser.add_argument('--features', type=int, default=702)
     parser.add_argument('--dropout', type=float, default=0.5)
     # optimizer
-    parser.add_argument('--lr', type=float, default=0.1,
+    parser.add_argument('--lr', type=float, default=0.2,
                         help="learning rate of new parameters, for ImageNet pretrained"
                              "parameters it is 10 times smaller than this")
     parser.add_argument('--momentum', type=float, default=0.9)
+    #parser.add_argument('--weight-decay', type=float, default=5e-2)
     parser.add_argument('--weight-decay', type=float, default=5e-4)
     # training configs
     parser.add_argument('--resume', type=str, default='', metavar='PATH')

@@ -46,6 +46,7 @@ class DMMLLoss(nn.Module):
             center_points = torch.stack([torch.mean(feature[support_inds], dim=0)
                                          for support_inds in support_inds_list])
             dists = euclidean_dist(query_samples, center_points)
+            # dists = cosine_dist(query_samples, center_points)
         elif self.distance_mode == 'hard_mining':
             dists = []
             max_self_dists = []

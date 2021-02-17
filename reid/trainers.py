@@ -19,8 +19,9 @@ class Trainer(object):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = model
         self.AE_classifier = AE_classifier
-        self.pid_criterion = torch.nn.CrossEntropyLoss().to(self.device)
-        #self.pid_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None).to(self.device)
+        self.pid_criterion = torch.nn.CrossEntropyLoss()
+        self.metric_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None)
+        #self.metric_criterion = DMMLLoss(num_support=5, distance_mode="center_support", margin=0.4, gid=None)
         self.xi = xi
 
     def train(self, epoch, data_loader, target_train_loader, optimizer, print_freq=1):
@@ -62,8 +63,11 @@ class Trainer(object):
                 inputs_target, index_target = self._parse_long_data(long_data)
 
             # Source loss
-            outputs = self.model(inputs)
-            source_loss = self.pid_criterion(outputs, pids)
+            alpha = 1
+            outputs, logits = self.model(inputs, 'src_feat')
+            metric_loss = self.metric_criterion(outputs, pids).to(self.device)
+            cross_entropy_loss = self.pid_criterion(logits, pids).to(self.device)
+            source_loss = (alpha * metric_loss) + ((1 - alpha) * cross_entropy_loss)
             prec, = accuracy(outputs.data, pids.data)
             prec1 = prec[0]
 
