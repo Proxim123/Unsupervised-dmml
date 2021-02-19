@@ -20,8 +20,8 @@ class Trainer(object):
         self.model = model
         self.AE_classifier = AE_classifier
         self.pid_criterion = torch.nn.CrossEntropyLoss()
-        self.metric_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None)
-        #self.metric_criterion = DMMLLoss(num_support=5, distance_mode="center_support", margin=0.4, gid=None)
+        #self.metric_criterion = DMMLLoss(num_support=5, distance_mode="hard_mining", margin=0.4, gid=None)
+        self.metric_criterion = DMMLLoss(num_support=5, distance_mode="center_support", margin=0.4, gid=None)
         self.xi = xi
 
     def train(self, epoch, data_loader, target_train_loader, optimizer, print_freq=1):

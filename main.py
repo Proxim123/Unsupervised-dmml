@@ -23,7 +23,7 @@ from reid.nonparametric_classifier import nonparametric_classifier
 from reid.loss.sampler import RandomSampler
 from reid.loss.market1501 import Market1501
 from reid.loss.duke import DukeMTMC_reID
-
+from reid.data import make_dataloader
 
 def get_data(data_dir, source, target, height, width, batch_size, re=0, workers=8):
     dataset = Data(data_dir, source, target)
@@ -40,10 +40,13 @@ def get_data(data_dir, source, target, height, width, batch_size, re=0, workers=
         normalizer,
         T.RandomErasing(EPSILON=re),
     ])
-    #train_set = Market1501("./data/market", train_transformer, split='train')
     dataset_root = osp.join(data_dir, source)
-    #train_set = Market1501(dataset_root, train_transformer, split='train')
-    train_set = DukeMTMC_reID(dataset_root, train_transformer, split='train')
+    if source == 'market':
+        train_set = Market1501(dataset_root, train_transformer, split='train')
+        #args.num_classes = 751
+    elif source == 'duke':
+        train_set = DukeMTMC_reID(dataset_root, train_transformer, split='train')
+        #args.num_classes = 702
     test_transformer = T.Compose([
         T.Resize((height, width), interpolation=3),
         T.ToTensor(),
@@ -177,15 +180,17 @@ def main(args):
 
     def adjust_lr(epoch):
         step_size = args.epochs_decay
-        epoch_total = args.epochs
-        lr = args.lr * (0.2 ** (epoch // step_size))
-        print('learning rate: {}'.format(lr))
+        #epoch_total = args.epochs
+        lr = args.lr * (0.1 ** (epoch // step_size))
+        #print('learning rate: {}'.format(lr))
         for g in optimizer.param_groups:
             g['lr'] = lr * g.get('lr_mult', 1)
 
     # Start training
     for epoch in range(start_epoch, args.epochs):
         adjust_lr(epoch)
+        if epoch % 10 == 0:
+            source_train_loader = make_dataloader(args, epoch)
         trainer.train(epoch, source_train_loader, target_train_loader, optimizer)
         save_checkpoint({
             'state_dict': model.module.state_dict(),
@@ -241,7 +246,7 @@ if __name__ == '__main__':
     working_dir = osp.dirname(osp.abspath(__file__))
     parser.add_argument('--data-dir', type=str, metavar='PATH', default=osp.join("", 'data'))
     parser.add_argument('--logs-dir', type=str, metavar='PATH', default=osp.join(working_dir, 'logs'))
-    parser.add_argument('--dataset_root=', type=str, default='./data/duke')
+    #parser.add_argument('--dataset_root=', type=str, default='./data/duke')
     # testing configs
     parser.add_argument('--output_feature', type=str, default='pool5')
     # hyper-parameter
