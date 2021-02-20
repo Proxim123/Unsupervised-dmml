@@ -53,7 +53,8 @@ class nonparametric_classifier(nn.Module):
         inputs /= self.tau
 
         if epoch > 4:
-            loss, ks = self.target_loss(inputs, targets)
+            #loss, ks = self.target_loss(inputs, targets)
+            loss, ks = self.cross_entropy2d(inputs, targets)
             return loss, ks
         else:
             loss = F.cross_entropy(inputs, targets)
@@ -84,3 +85,20 @@ class nonparametric_classifier(nn.Module):
         targets_onehot.scatter_(1, targets, float(1))
 
         return targets_onehot, ks1
+
+	def cross_entropy2d(self, inputs, targets, weight=None, size_average=True):
+		# inputs: (n, c, h, w), targets: (n, h, w)
+		n, c, h, w = inputs.size()
+		# log_p: (n, c, h, w)
+		log_p = F.log_softmax(inputs)
+		# log_p: (n*h*w, c)
+		log_p = log_p.transpose(1, 2).transpose(2, 3).contiguous().view(-1, c)
+		log_p = log_p[targets.view(n, h, w, 1).repeat(1, 1, 1, c) >= 0]
+		log_p = log_p.view(-1, c)
+		# targets: (n*h*w,)
+		mask = targets >= 0
+		targets = targets[mask]
+		loss = F.nll_loss(log_p, targets, weight=weight, size_average=False)
+		if size_average:
+			loss /= mask.data.sum()
+		return loss
